@@ -1,0 +1,8 @@
+#exclude all hidden files except .gitignore
+.*
+!.gitignore
+#PyCharm crap
+.idea/*
+*.pyc
+**/__pycache__/
+#Standard files not to include here
