@@ -1,6 +1,9 @@
 from pyVim.connect import SmartConnect, SmartConnectNoSSL
 import ssl
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 context.verify_mode = ssl.CERT_NONE
