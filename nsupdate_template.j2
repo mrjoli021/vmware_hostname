@@ -1,0 +1,5 @@
+{% if ping_result == False %}
+update delete {{ current_hostname }}. A
+{% endif %}
+update add {{ hostname }}.{{ domain }}. 600 A {{ ip_address }}
+send

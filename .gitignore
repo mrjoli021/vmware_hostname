@@ -6,3 +6,6 @@
 *.pyc
 **/__pycache__/
 #Standard files not to include here
+/build
+/dist
+/vmware_host.egg-info
