@@ -9,3 +9,4 @@ six==1.16.0
 urllib3==1.26.10
 user-agent==0.1.10
 weblib==0.1.30
+Jinja2==3.1.2
