@@ -69,14 +69,17 @@ for i, j in enumerate(vm_names):
 # gets current UUID
 local_uuid = subprocess.getoutput(dmidecode)
 
+
+# if hostname does not contain a domain add it.
+if not domain in current_hostname:
+    current_hostname = f"{current_hostname}.{domain}"
+
 #print(uuid_dict)
 
 #print(local_uuid)
 
 # Search all VM's and set current hostname
 for key, value in uuid_dict.items():
-
-    template_file = "nsupdate_template.j2"
 
     if local_uuid in value:
         #print(f"UUID is {local_uuid} and hostname is {key}")
@@ -86,13 +89,11 @@ for key, value in uuid_dict.items():
             print("Hostnames match nothing to do")
             break
 
-        # if host is alive update it
+        # if host is alive, update it
         ping_result = my_ping(f"{hostname}.{domain}")
 
-        print(f"ping result is {ping_result}")
-
         ip_address = get_ip_addr("ens192")
-        j2_file = "nsupdate_template.j2"
+        #j2_file = "nsupdate_template.j2"
 
         template_dict = {}
         template_dict["ping_result"] = ping_result
@@ -120,8 +121,3 @@ for key, value in uuid_dict.items():
 
         # set /etc/hosts
         subprocess.run(["sed", "-i", f'2s/.*/127.0.0.1\t{hostname}.{domain}/', "/etc/hosts"])
-
-        # if host does not exist in DNS add it else update it
-
-#print(get_ip_addr("ens192"))
-#print(my_ping(f"{hostname}.{domain}"))
