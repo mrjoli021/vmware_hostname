@@ -1,5 +1,6 @@
 from pyVim.connect import SmartConnectNoSSL
 import os
+import sys
 from dotenv import load_dotenv
 import subprocess
 import socket
@@ -13,13 +14,17 @@ load_dotenv()
 vcenter = os.getenv('vcenter')
 username = os.getenv('username')
 password = os.getenv('password')
-domain = "zbs.local"
+domain = os.getenv('domain')
 
 dmidecode = "dmidecode | grep 'Serial Number: VMware' | cut -d ':' -f 2 | cut -d '-' -f 2- | tr -d ' ' | sed 's/-//'"
 set_hostname = "hostnamectl set-hostname"
 current_hostname = os.uname()[1]
 
-c = SmartConnectNoSSL(host=vcenter, user=username, pwd=password)
+try:
+    c = SmartConnectNoSSL(host=vcenter, user=username, pwd=password)
+except socket.gaierror:
+    print("Incorrect credential provided.  Please update the .env file and try again.")
+    sys.exit(1)
 
 datacenter = c.content.rootFolder.childEntity[0]
 vm_names = datacenter.vmFolder.childEntity
@@ -71,18 +76,18 @@ local_uuid = subprocess.getoutput(dmidecode)
 
 
 # if hostname does not contain a domain add it.
-if not domain in current_hostname:
+if domain not in current_hostname:
     current_hostname = f"{current_hostname}.{domain}"
 
-#print(uuid_dict)
+# print(uuid_dict)
 
-#print(local_uuid)
+# print(local_uuid)
 
 # Search all VM's and set current hostname
 for key, value in uuid_dict.items():
 
     if local_uuid in value:
-        #print(f"UUID is {local_uuid} and hostname is {key}")
+        print(f"UUID is {local_uuid} and hostname is {key}")
         hostname = key
 
         if current_hostname == f"{hostname}.{domain}":
