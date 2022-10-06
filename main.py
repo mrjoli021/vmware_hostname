@@ -13,7 +13,7 @@ load_dotenv()
 vcenter = os.getenv('vcenter')
 username = os.getenv('username')
 password = os.getenv('password')
-domain = "zbs.local"
+domain = os.getenv('domain')
 
 dmidecode = "dmidecode | grep 'Serial Number: VMware' | cut -d ':' -f 2 | cut -d '-' -f 2- | tr -d ' ' | sed 's/-//'"
 set_hostname = "hostnamectl set-hostname"
@@ -37,9 +37,10 @@ template_environment = Environment(
 
 
 def my_ping(host):
-    #print(f"pinging {host}")
+    # print(f"pinging {host}")
     cmd = f"ping -c 1 {host}";
-    response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE); output, error = response.communicate()
+    response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE);
+    output, error = response.communicate()
     return response.returncode == 0
 
 
@@ -49,6 +50,7 @@ def get_ip_addr(interface):
     result = subprocess.getoutput(ip_addr_command)
 
     return result
+
 
 # this loop gets this names and UUID for all VM's and stores it into a dictionary
 for i, j in enumerate(vm_names):
@@ -60,29 +62,27 @@ for i, j in enumerate(vm_names):
     # for each line in the config get the first UUID and add the VM name as the key and UUID as the value.
     for index in range(len(string_data)):
         if "uuid" in string_data[index]:
-          formatted_uuid = string_data[index].split('=')
-          # removes all preformatted data
-          uuid_dict[j.name] = formatted_uuid[1].strip().replace("'", "").strip(',').replace("-", "")
-          break
-
+            formatted_uuid = string_data[index].split('=')
+            # removes all preformatted data
+            uuid_dict[j.name] = formatted_uuid[1].strip().replace("'", "").strip(',').replace("-", "")
+            break
 
 # gets current UUID
 local_uuid = subprocess.getoutput(dmidecode)
-
 
 # if hostname does not contain a domain add it.
 if not domain in current_hostname:
     current_hostname = f"{current_hostname}.{domain}"
 
-#print(uuid_dict)
+# print(uuid_dict)
 
-#print(local_uuid)
+# print(local_uuid)
 
 # Search all VM's and set current hostname
 for key, value in uuid_dict.items():
 
     if local_uuid in value:
-        #print(f"UUID is {local_uuid} and hostname is {key}")
+        # print(f"UUID is {local_uuid} and hostname is {key}")
         hostname = key
 
         if current_hostname == f"{hostname}.{domain}":
@@ -93,15 +93,21 @@ for key, value in uuid_dict.items():
         ping_result = my_ping(f"{hostname}.{domain}")
 
         ip_address = get_ip_addr("ens192")
-        #j2_file = "nsupdate_template.j2"
+        # j2_file = "nsupdate_template.j2"
+
+        # sanitize hostname
+        under_score = "_"
+        dash = "-"
+
+        if under_score in hostname:
+            hostname = hostname.replace(under_score, dash)
 
         template_dict = {}
         template_dict["ping_result"] = ping_result
         template_dict["current_hostname"] = current_hostname
-        template_dict["hostname"] = hostname
+        template_dict["hostname"] = hostname.lower()
         template_dict["domain"] = domain
         template_dict["ip_address"] = ip_address
-
 
         t = template_environment.get_template(template_file)
 
@@ -114,7 +120,6 @@ for key, value in uuid_dict.items():
 
         # nsupdate
         subprocess.run(["nsupdate", rendered_file])
-
 
         # set hostname via command
         subprocess.run(["hostnamectl", "set-hostname", f"{hostname}.{domain}"])

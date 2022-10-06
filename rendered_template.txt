@@ -1,3 +1,0 @@
-update delete blah4.zbs.local. A
-update add blah5.zbs.local. 600 A 10.21.30.145
-send
