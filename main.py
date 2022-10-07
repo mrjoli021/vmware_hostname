@@ -71,7 +71,7 @@ for i, j in enumerate(vm_names):
 local_uuid = subprocess.getoutput(dmidecode)
 
 # if hostname does not contain a domain add it.
-if not domain in current_hostname:
+if domain not in current_hostname:
     current_hostname = f"{current_hostname}.{domain}"
 
 # print(uuid_dict)
@@ -122,7 +122,9 @@ for key, value in uuid_dict.items():
         subprocess.run(["nsupdate", rendered_file])
 
         # set hostname via command
-        subprocess.run(["hostnamectl", "set-hostname", f"{hostname}.{domain}"])
+        #subprocess.run(["hostnamectl", "set-hostname", f"{hostname}.{domain}"])
+        print(f" hostname being set to {set_hostname} {hostname}.{domain}")
+        subprocess.run([f"{set_hostname}", f"{hostname}.{domain}"])
 
         # set /etc/hosts
         subprocess.run(["sed", "-i", f'2s/.*/127.0.0.1\t{hostname}.{domain}/', "/etc/hosts"])
