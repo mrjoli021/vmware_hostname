@@ -16,7 +16,6 @@ password = os.getenv('password')
 domain = os.getenv('domain')
 
 dmidecode = "dmidecode | grep 'Serial Number: VMware' | cut -d ':' -f 2 | cut -d '-' -f 2- | tr -d ' ' | sed 's/-//'"
-set_hostname = "hostnamectl set-hostname"
 current_hostname = os.uname()[1]
 
 c = SmartConnectNoSSL(host=vcenter, user=username, pwd=password)
@@ -37,7 +36,6 @@ template_environment = Environment(
 
 
 def my_ping(host):
-    # print(f"pinging {host}")
     cmd = f"ping -c 1 {host}";
     response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE);
     output, error = response.communicate()
@@ -52,7 +50,7 @@ def get_ip_addr(interface):
     return result
 
 
-# this loop gets this names and UUID for all VM's and stores it into a dictionary
+# this loop gets names and UUID for all VM's in a given Vcenter and stores it into a dictionary called uuid_dict
 for i, j in enumerate(vm_names):
     # retrieves the config for each VM and puts it into a list format
     try:
@@ -74,11 +72,7 @@ local_uuid = subprocess.getoutput(dmidecode)
 if domain not in current_hostname:
     current_hostname = f"{current_hostname}.{domain}"
 
-# print(uuid_dict)
-
-# print(local_uuid)
-
-# Search all VM's and set current hostname
+# Search all dictionary entries for current hostname
 for key, value in uuid_dict.items():
 
     if local_uuid in value:
@@ -122,9 +116,8 @@ for key, value in uuid_dict.items():
         subprocess.run(["nsupdate", rendered_file])
 
         # set hostname via command
-        #subprocess.run(["hostnamectl", "set-hostname", f"{hostname}.{domain}"])
-        print(f" hostname being set to {set_hostname} {hostname}.{domain}")
-        subprocess.run([f"{set_hostname}", f"{hostname}.{domain}"])
+        subprocess.run(["hostnamectl", "set-hostname", f"{hostname}.{domain}"])
+        print(f" hostname being set to 'hostnamectl set-hostname {hostname}.{domain}'")
 
         # set /etc/hosts
         subprocess.run(["sed", "-i", f'2s/.*/127.0.0.1\t{hostname}.{domain}/', "/etc/hosts"])
